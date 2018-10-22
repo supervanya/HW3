@@ -7,9 +7,9 @@
 <div>
 <form method="POST">
 	{{ form.hidden_tag() }}
-	{{ form.text.label }} {{ form.text() }}
-	{{ form.username.label }} {{ form.username() }}
-    {{ form.display_name.label }} {{ form.display_name() }}
+	{{ form.text() }} {{ form.text.label }}  <br>
+	{{ form.username() }} {{ form.username.label }} <br>
+    {{ form.display_name() }} {{ form.display_name.label }} <br>
 	{{ form.submit() }}
 </form>
 </div>
@@ -19,7 +19,7 @@
 
 <div>
 {% for message in get_flashed_messages() %}
-    <strong>{{ message }}</strong>
+    <strong><font color="red">{{ message }}</font></strong>
 {% endfor %}
 </div>
 

@@ -93,8 +93,20 @@ class User(db.Model):
 
 # TODO 364: Make sure to check out the sample application linked in the readme to check if yours is like it!
 
+def word_count_check(min = 2):
+    error_message = "Should be at least {} words".format(min)
 
+    def _word_count_check(form,field):
+        if len(field.data.split()) < min:
+            raise ValidationError(error_message)
 
+    return _word_count_check
+
+class TweetForm(FlaskForm):
+    text = StringField("Enter the text of the tweet (no more than 280 chars):", validators=[Required(),Length(1,280)])
+    username = StringField("Enter the username of the twitter user (no '@'!):",validators=[Required(),Length(1,64)])
+    display_name = StringField("Enter the display name for the twitter user (must be at least 2 words):",validators=[Required(), word_count_check(min=2)])
+    submit = SubmitField()
 
 
 
@@ -133,33 +145,67 @@ def internal_server_error(e):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     # Initialize the form
+    form = TweetForm()
 
     # Get the number of Tweets
+    num_tweets = Tweet.query.count()
+
 
     # If the form was posted to this route,
     ## Get the data from the form
+    if request.method == 'POST' and form.validate_on_submit():
 
-    ## Find out if there's already a user with the entered username
-    ## If there is, save it in a variable: user
-    ## Or if there is not, then create one and add it to the database
+        entered_text         = form.text.data
+        entered_username     = form.username.data
+        entered_display_name = form.display_name.data
 
-    ## If there already exists a tweet in the database with this text and this user id (the id of that user variable above...) ## Then flash a message about the tweet already existing
-    ## And redirect to the list of all tweets
+        # flash(' '.join([entered_text,entered_username,entered_display_name]))
 
-    ## Assuming we got past that redirect,
-    ## Create a new tweet object with the text and user id
-    ## And add it to the database
-    ## Flash a message about a tweet being successfully added
-    ## Redirect to the index page
+    # display_name
+
+
+        ## Find out if there's already a user with the entered username
+        ## If there is, save it in a variable: user
+        ## Or if there is not, then create one and add it to the database
+        user = User.query.filter_by(username=entered_username).first()
+        if not user:
+            user = User(username = entered_username, display_name=entered_display_name)
+            db.session.add(user)
+            db.session.commit()
+            flash("Username was saved!")
+
+        ## If there already exists a tweet in the database with this text and this user id (the id of that user variable above...) ## Then flash a message about the tweet already existing
+        ## And redirect to the list of all tweets
+        tweet = Tweet.query.filter_by(text=entered_text, user_id=user.id).first()
+        try:
+            flash(str(tweet.text + str(tweet.user_id)))
+        except:
+            pass
+        if tweet and tweet.user_id == user.id:
+            flash("This tweet already exists by this user!")
+            return redirect(url_for('see_all_tweets'))
+
+        ## Assuming we got past that redirect,
+        ## Create a new tweet object with the text and user id
+        ## And add it to the database
+        ## Flash a message about a tweet being successfully added
+        ## Redirect to the index page
+        tweet = Tweet(text = entered_text, user_id=user.id)
+        db.session.add(tweet)
+        db.session.commit()
+        flash("tweet was saved!")
+        return redirect(url_for('index'))
+
 
     # PROVIDED: If the form did NOT validate / was not submitted
     errors = [v for v in form.errors.values()]
     if len(errors) > 0:
         flash("!!!! ERRORS IN FORM SUBMISSION - " + str(errors))
-    return render_template('index.html',) # TODO 364: Add more arguments to the render_template invocation to send data to index.html
+    return render_template('index.html', form = form, num_tweets = num_tweets) # TODO 364: Add more arguments to the render_template invocation to send data to index.html
 
 @app.route('/all_tweets')
 def see_all_tweets():
+    return "all tweets!!!"
     pass # Replace with code
     # TODO 364: Fill in this view function so that it can successfully render the template all_tweets.html, which is provided.
     # HINT: Careful about what type the templating in all_tweets.html is expecting! It's a list of... not lists, but...
