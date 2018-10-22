@@ -10,59 +10,69 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, ValidationError
 from wtforms.validators import Required, Length
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import create_engine
+from flask_script import Manager, Shell
+
 
 ############################
 # Application configurations
 ############################
 app = Flask(__name__)
+app.debug = True
+app.use_reloader = True
+
 app.config['SECRET_KEY'] = 'hard to guess string from si364'
 ## TODO 364: Create a database in postgresql in the code line below, and fill in your app's database URI. It should be of the format: postgresql://localhost/YOUR_DATABASE_NAME
 
 ## Your final Postgres database should be your uniqname, plus HW3, e.g. "jczettaHW3" or "maupandeHW3"
-app.config["SQLALCHEMY_DATABASE_URI"] = ""
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://localhost/vanoHW3"
 ## Provided:
-app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True # saves you from having to explicitly commit database changes, e.g., db.session.commit()
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False # turns off event tracking / warnings to save system resources
+
+app.config['SQLALCHEMY_ECHO']=True
 
 ##################
 ### App setup ####
 ##################
+manager = Manager(app)
 db = SQLAlchemy(app) # For database use
 
 
+
 #########################
 #########################
-######### Everything above this line is important/useful setup,
-## not problem-solving.##
+## Everything above this 
+## line is important/useful 
+## setup, not problem-solving
 #########################
 #########################
 
 #########################
 ##### Set up Models #####
 #########################
+class Tweet(db.Model):
+    __tablename__ = "tweet" # makes it easier to refer to later
+    id = db.Column(db.Integer, primary_key=True) 
+    text = db.Column(db.String(280))
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
 
-## TODO 364: Set up the following Model classes, as described, with the respective fields (data types).
+    def __repr__(self): 
+        return "{} (ID: {})".format(self.text,self.id)   
 
-## The following relationships should exist between them:
-# Tweet:User - Many:One
+class User(db.Model):
+    __tablename__ = "user" # makes it easier to refer to later
+    id = db.Column(db.Integer, primary_key=True) 
+    username = db.Column(db.String(64), unique=True)
+    display_name = db.Column(db.String(124))
+    tweets = db.relationship('Tweet', backref='user')
 
-# - Tweet
-## -- id (Integer, Primary Key)
-## -- text (String, up to 280 chars)
-## -- user_id (Integer, ID of user posted -- ForeignKey)
-
-## Should have a __repr__ method that returns strings of a format like:
-#### {Tweet text...} (ID: {tweet id})
+    def __repr__(self):
+    	# {username} | ID: {id}
+        return "{} | ID: {}".format(self.username,self.id)   
+		
 
 
-# - User
-## -- id (Integer, Primary Key)
-## -- username (String, up to 64 chars, Unique=True)
-## -- display_name (String, up to 124 chars)
-## ---- Line to indicate relationship between Tweet and User tables (the 1 user: many tweets relationship)
-
-## Should have a __repr__ method that returns strings of a format like:
-#### {username} | ID: {id}
 
 
 ########################
@@ -82,6 +92,11 @@ db = SQLAlchemy(app) # For database use
 # - the display name MUST be at least 2 words (this is a useful technique to practice, even though this is not true of everyone's actual full name!)
 
 # TODO 364: Make sure to check out the sample application linked in the readme to check if yours is like it!
+
+
+
+
+
 
 
 ###################################
@@ -175,4 +190,32 @@ def see_all_users():
 
 if __name__ == '__main__':
     db.create_all() # Will create any defined models when you run the application
+    manager.run()
     app.run(use_reloader=True,debug=True) # The usual
+
+
+
+
+# DONE
+## TODO 364: Set up the following Model classes, as described, with the respective fields (data types).
+
+## The following relationships should exist between them:
+# Tweet:User - Many:One
+
+# - Tweet
+## -- id (Integer, Primary Key)
+## -- text (String, up to 280 chars)
+## -- user_id (Integer, ID of user posted -- ForeignKey)
+
+## Should have a __repr__ method that returns strings of a format like:
+#### {Tweet text...} (ID: {tweet id})
+
+
+# - User
+## -- id (Integer, Primary Key)
+## -- username (String, up to 64 chars, Unique=True)
+## -- display_name (String, up to 124 chars)
+## ---- Line to indicate relationship between Tweet and User tables (the 1 user: many tweets relationship)
+
+## Should have a __repr__ method that returns strings of a format like:
+#### {username} | ID: {id}
