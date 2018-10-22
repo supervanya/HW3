@@ -159,11 +159,6 @@ def index():
         entered_username     = form.username.data
         entered_display_name = form.display_name.data
 
-        # flash(' '.join([entered_text,entered_username,entered_display_name]))
-
-    # display_name
-
-
         ## Find out if there's already a user with the entered username
         ## If there is, save it in a variable: user
         ## Or if there is not, then create one and add it to the database
@@ -196,7 +191,6 @@ def index():
         flash("tweet was saved!")
         return redirect(url_for('index'))
 
-
     # PROVIDED: If the form did NOT validate / was not submitted
     errors = [v for v in form.errors.values()]
     if len(errors) > 0:
@@ -205,17 +199,21 @@ def index():
 
 @app.route('/all_tweets')
 def see_all_tweets():
-    return "all tweets!!!"
-    pass # Replace with code
+    # Replace with code
     # TODO 364: Fill in this view function so that it can successfully render the template all_tweets.html, which is provided.
     # HINT: Careful about what type the templating in all_tweets.html is expecting! It's a list of... not lists, but...
     # HINT #2: You'll have to make a query for the tweet and, based on that, another query for the username that goes with it...
+    all_tweets = Tweet.query.all()
+
+    return render_template('all_tweets.html', all_tweets = all_tweets)
 
 
 @app.route('/all_users')
 def see_all_users():
-    pass # Replace with code
+    # Replace with code
     # TODO 364: Fill in this view function so it can successfully render the template all_users.html, which is provided.
+    users = User.query.all()
+    return render_template('all_users.html', users = users)
 
 # TODO 364
 # Create another route (no scaffolding provided) at /longest_tweet with a view function get_longest_tweet (see details below for what it should do)
@@ -232,6 +230,15 @@ def see_all_users():
 ## - Dictionary accumulation, the max value pattern
 ## - Sorting
 # may be useful for this problem!
+@app.route('/longest_tweet')
+def display_longest_tweet():
+    all_tweets = Tweet.query.all()
+    all_tweets.sort(key=lambda tw:len(tw.text.replace(" ","")), reverse=True)
+    longest_tweet = all_tweets[0]
+
+    return render_template('longest_tweet.html', tweet = longest_tweet)
+
+
 
 
 if __name__ == '__main__':

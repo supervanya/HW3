@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h3>Here is the longest tweet in the database:</h3>
+{{ tweet.text }}<br><i>posted by</i> <strong>@{{ tweet.user.username }} </strong>({{ tweet.user.display_name }})</li><br><br>
+
+
+{% endblock %}
